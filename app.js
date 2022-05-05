@@ -40,6 +40,15 @@ const newEntrySchema = joi.object({
         .required()
 })
 
+// TESTE (BODY) POST /sign-up
+
+// {
+//     "email": "carlacarlaclementino@gmail.com",
+//     "name": "carla clementino",
+//     "password": "Carla102545@",
+//     "passwordConfirmed": "Carla102545@"
+//   }
+
 app.post('/sign-up', async (req, res) => {
     const { email, name, password, passwordConfirmed } = req.body;
     if(password !== passwordConfirmed) {
@@ -83,13 +92,12 @@ app.post('/sign-up', async (req, res) => {
     mongoClient.close();
 })
 
+// TESTE (HEADER) POST /sign-up
+
 // {
-//     "email": "carlacarlaclementino@gmail.com",
-//     "name": "carla clementino",
-//     "password": "Carla102545@",
-//     "passwordConfirmed": "Carla102545@"
+//     "name": "ca"
+//     "password": "Carla1*****@"
 //   }
-  
 
 app.post('/sign-in', async (req, res) => {
     const { name, password } = req.headers;
@@ -115,20 +123,33 @@ app.post('/sign-in', async (req, res) => {
 
 // TESTE (BODY) POST /register
 
+// (BODY)
+
 // {
 //     "value": "234.54",
 //     "description": "blabla",
 //     "type": "exit"
 //  }
 
+//  (HEADER)
+
+// authorization: Bearer 39163183-3a2b-4722-bdd2-7657f14b6e8d
+
 app.post('/register', async (req, res) => {
-    const { value, description, type } = req.body;
+    const { value, description, type} = req.body;
+    const { authorization } = req.headers;
     const validation = newEntrySchema.validate({ value, description, type });
+    const token = authorization?.replace('Bearer ', '');
+    if(!token){
+        res.status(401).send('Token invalido');
+        return;
+    }
     if(validation.error){
         res.status(422).send("Preencha os campos corretamente");
         return;
     }
     const register = {
+        token,
         value,
         description,
         type,
@@ -137,13 +158,46 @@ app.post('/register', async (req, res) => {
     try {
         await mongoClient.connect();
         database = mongoClient.db('myWallet');
+        const tokenValidation = await database.collection("keys").findOne({token});
+        if(!tokenValidation){
+            res.status(401).send('Token invalido');
+            return;
+        }
         if(type === "entry"){
-            const user = await database.collection("entries").insertOne(register);
+            const user = await database.collection("registers").insertOne(register);
             res.status(201).send('Entrada salva')
         } else {
-            const user = await database.collection("exits").insertOne(register);
+            const user = await database.collection("registers").insertOne(register);
             res.status(201).send('Entrada salva')
         }
+    } catch (err) {
+        res.status(500).send('Erro');
+    }
+    mongoClient.close();
+})
+
+// TESTE (HEADER) GET /register
+
+// authorization: Bearer 39163183-3a2b-4722-bdd2-7657f14b6e8d
+
+app.get('/register', async (req, res) => {
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+    if(!token){
+        res.status(401).send('Token invalido');
+        return;
+    }
+    try {
+        await mongoClient.connect();
+        database = mongoClient.db('myWallet');
+        const tokenValidation = await database.collection("keys").findOne({token});
+        if(!tokenValidation){
+            res.status(401).send('Token invalido');
+            return;
+        }
+        const registers = await database.collection("registers").find({token}).toArray(); 
+        const reverseRegisters = registers.slice(0).reverse();
+        res.status(200).send(reverseRegisters);
     } catch (err) {
         res.status(500).send('Erro');
     }
