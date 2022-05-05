@@ -113,7 +113,7 @@ app.post('/sign-in', async (req, res) => {
     mongoClient.close();
 });
 
-// TESTE (BODY) POST /NEW-ENTRY
+// TESTE (BODY) POST /register
 
 // {
 //     "value": "234.54",
@@ -121,7 +121,7 @@ app.post('/sign-in', async (req, res) => {
 //     "type": "exit"
 //  }
 
-app.post('/new-entry', async (req, res) => {
+app.post('/register', async (req, res) => {
     const { value, description, type } = req.body;
     const validation = newEntrySchema.validate({ value, description, type });
     if(validation.error){
@@ -149,7 +149,5 @@ app.post('/new-entry', async (req, res) => {
     }
     mongoClient.close();
 })
-
-
 
 app.listen(5000);
