@@ -1,10 +1,12 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
-import registersRouter from "./Routes/Registers.js"
-import signInRouter from "./Routes/SignIn.js"
-import signUpRouter from "./Routes/SignUp.js"
-import signInMiddlware from "./Middleware/SignInMiddleware.js";
+import registersRouter from "./Routes/Registers.js";
+import signInRouter from "./Routes/SignIn.js";
+import signUpRouter from "./Routes/SignUp.js";
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -16,5 +18,4 @@ app.use(signInRouter);
 
 app.use(registersRouter);
 
-
-app.listen(5000);
+app.listen(process.env.PORT);
