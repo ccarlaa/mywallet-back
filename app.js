@@ -32,6 +32,7 @@ const signUpSchema = joi.object({
 
 const newEntrySchema = joi.object({
     value: joi.string()
+        .pattern(/^[0-9]{0,10}[.]{1,1}[0-9]{0,2}$/)
         .required(),
     description: joi.string()
         .required(),
@@ -40,17 +41,9 @@ const newEntrySchema = joi.object({
         .required()
 })
 
-// TESTE (BODY) POST /sign-up
-
-// {
-//     "email": "carlacarlaclementino@gmail.com",
-//     "name": "carla clementino",
-//     "password": "Carla102545@",
-//     "passwordConfirmed": "Carla102545@"
-//   }
-
 app.post('/sign-up', async (req, res) => {
-    const { email, name, password, passwordConfirmed } = req.body;
+    console.log(req.body)
+    const { name, email, password, passwordConfirmed } = req.body;
     if(password !== passwordConfirmed) {
         res.status(422).send("Senhas diferentes");
         return;
@@ -71,14 +64,14 @@ app.post('/sign-up', async (req, res) => {
     try {
         await mongoClient.connect();
         database = mongoClient.db('myWallet');
-        const repetedUser = await database.collection("users").findOne({name});
+        const repetedUser = await database.collection("users").findOne({email});
         if(repetedUser) {
-            res.status(422).send("Já existe um usuário com esse nome. Por favor, escolha outro nome.");
+            res.status(422).send("Já existe um usuário cadastrado com esse email");
             return;
         }
         await database.collection("users").insertOne(signUp); 
         const token = uuid();
-        const userInformation = await database.collection("users").findOne({name});
+        const userInformation = await database.collection("users").findOne({email});
         const { _id } = userInformation
         const keys = {
             _id,
@@ -92,33 +85,30 @@ app.post('/sign-up', async (req, res) => {
     mongoClient.close();
 })
 
-// TESTE (HEADER) POST /sign-up
-
-// {
-//     "name": "ca"
-//     "password": "Carla1*****@"
-//   }
-
 app.post('/sign-in', async (req, res) => {
-    const { name, password } = req.headers;
+    console.log(req.body)
+    const { email, password } = req.body;
     try {
         await mongoClient.connect();
         database = mongoClient.db('myWallet');
-        const user = await database.collection("users").findOne({name});
+        const user = await database.collection("users").findOne({email});
         if(user && bcrypt.compareSync(password, user.passwordHash)){
             const { _id } = user;
             const userKey = await database.collection("keys").findOne({_id});
-            const { token } = userKey;
+            console.log(userKey);
             const infos = {
-                name,
-                token
+                name: user.name,
+                token: userKey.token
             }
             res.status(201).send(infos);
+            console.log("hey" + infos);
         }
     } catch (err) {
         res.status(500).send('Erro');
+        console.log("erro" + infos);
     }
     mongoClient.close();
+
 });
 
 // TESTE (BODY) POST /register
@@ -153,7 +143,7 @@ app.post('/register', async (req, res) => {
         value,
         description,
         type,
-        time: dayjs().format("DD/MM")
+        date: dayjs().format("DD/MM")
     }
     try {
         await mongoClient.connect();
@@ -203,5 +193,6 @@ app.get('/register', async (req, res) => {
     }
     mongoClient.close();
 })
+
 
 app.listen(5000);
