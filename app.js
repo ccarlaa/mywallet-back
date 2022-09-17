@@ -13,9 +13,12 @@ app.use(express.json());
 app.use(cors());
 
 app.use(signUpRouter);
-
 app.use(signInRouter);
-
 app.use(registersRouter);
 
-app.listen(process.env.PORT);
+const port = process.env.PORT;
+app.listen(port, () => {
+    console.log(`|-----------------------------------|`)
+    console.log(`| Running at http://localhost:${port}  |`)
+    console.log(`|-----------------------------------|`)
+})
