@@ -16,7 +16,7 @@ app.use(signUpRouter);
 app.use(signInRouter);
 app.use(registersRouter);
 
-const port = 5000;
+const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`|-----------------------------------|`)
     console.log(`| Running at http://localhost:${port}  |`)
