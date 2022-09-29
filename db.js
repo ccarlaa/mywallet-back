@@ -8,6 +8,7 @@ let database = null;
 try {
     await mongoClient.connect();
     database = mongoClient.db('myWallet');
+    console.log("conectado")
 } catch (err) {
     console.log("Falha na conexão");
 }
